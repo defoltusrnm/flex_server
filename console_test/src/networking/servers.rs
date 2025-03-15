@@ -1,7 +1,12 @@
 use std::pin::Pin;
 
-use super::{address_src::EndpointAddressSrc, connections::NetConnection, listeners::NetListener};
-use crate::{async_utils::async_and_then::AsyncAndThen, server_errors::errors::AppError};
+use flex_net_core::{
+    async_utils::async_and_then::AsyncAndThen,
+    error_handling::server_errors::ServerError,
+    networking::{
+        address_src::EndpointAddressSrc, connections::NetConnection, listeners::NetListener,
+    },
+};
 
 pub trait NetServer<TConnection, TListener>
 where
@@ -11,12 +16,12 @@ where
     async fn start<
         TEndpointAddrSrc: EndpointAddressSrc,
         F: 'static
-            + FnOnce(TListener) -> Pin<Box<dyn Future<Output = Result<(), AppError>> + Send>>
+            + FnOnce(TListener) -> Pin<Box<dyn Future<Output = Result<(), ServerError>> + Send>>
             + Send,
     >(
         src: TEndpointAddrSrc,
         handler: F,
-    ) -> Result<(), AppError>;
+    ) -> Result<(), ServerError>;
 }
 
 pub struct ContinuesServer;
@@ -30,12 +35,12 @@ where
     async fn start<
         TEndpointAddrSrc: EndpointAddressSrc,
         F: 'static
-            + FnOnce(TListener) -> Pin<Box<dyn Future<Output = Result<(), AppError>> + Send>>
+            + FnOnce(TListener) -> Pin<Box<dyn Future<Output = Result<(), ServerError>> + Send>>
             + Send,
     >(
         src: TEndpointAddrSrc,
         handler: F,
-    ) -> Result<(), AppError> {
+    ) -> Result<(), ServerError> {
         let server_result = src
             .get()
             .and_then_async(|addr| Box::pin(async move { TListener::bind(addr).await }))

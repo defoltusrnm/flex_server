@@ -1,22 +1,7 @@
 use std::net::SocketAddr;
 
+use flex_net_core::networking::connections::{NetConnection, NetReader, NetWriter};
 use tokio::net::TcpStream;
-
-pub trait NetWriter
-where
-    Self: Send + Sized,
-{
-    fn write();
-}
-
-pub trait NetReader
-where
-    Self: Send + Sized,
-{
-    fn read();
-}
-
-pub trait NetConnection: NetReader + NetWriter {}
 
 pub struct NetTcpConnection {
     inner_socket: TcpStream,

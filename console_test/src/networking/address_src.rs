@@ -1,5 +1,8 @@
-use crate::server_errors::errors::AppError;
 use std::env;
+
+use flex_net_core::{error_handling::server_errors::ServerError, networking::address_src::{EndpointAddress, EndpointAddressSrc}};
+
+use crate::server_errors::errors::ServerErrors;
 
 pub struct EndpointAddressSrcs;
 
@@ -9,33 +12,18 @@ impl EndpointAddressSrcs {
     }
 }
 
-pub struct EndpointAddress {
-    pub host: String,
-    pub port: i32,
-}
-
-impl EndpointAddress {
-    fn from_ip_and_port(host: String, port: i32) -> EndpointAddress {
-        EndpointAddress { host, port }
-    }
-}
-
-pub trait EndpointAddressSrc {
-    fn get(self) -> Result<EndpointAddress, AppError>;
-}
-
 pub struct EnvEndpointAddressSrc;
 
 impl EndpointAddressSrc for EnvEndpointAddressSrc {
-    fn get(self) -> Result<EndpointAddress, AppError> {
+    fn get(self) -> Result<EndpointAddress, ServerError> {
         env::var("HOST")
-            .map_err(|err| AppError::HostIsNotProvided(err))
+            .map_err(|err| ServerErrors::host_is_not_provided(err))
             .map(|host| {
                 let port = env::var("PORT")
-                    .map_err(|x| AppError::PortEnvReadError(x))
+                    .map_err(|x| ServerErrors::port_env_read_error(x))
                     .and_then(|x| {
                         x.parse::<i32>()
-                            .map_err(|err| AppError::PortParseError(err))
+                            .map_err(|err| ServerErrors::port_parse_error(err))
                     })
                     .unwrap_or_else(|err| {
                         log::error!(
