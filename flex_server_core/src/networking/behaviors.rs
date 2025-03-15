@@ -5,20 +5,24 @@ use flex_net_core::{
     networking::{connections::NetConnection, listeners::NetListener},
 };
 
-pub async fn infinite_read<
+pub fn infinite_read<TConnection, TListener>() -> Box<
+    dyn FnOnce(TListener) -> Pin<Box<dyn Future<Output = Result<(), ServerError>> + Send>> + Send,
+>
+where
     TConnection: NetConnection,
-    TListener: NetListener<TConnection> + std::marker::Send + 'static,
->(
-    listener: TListener,
-) -> Pin<Box<dyn Future<Output = Result<(), ServerError>> + Send>> {
-    Box::pin(async move {
-        loop {
-            match listener.accept().await {
-                Ok(conn) => log::info!("got connection"),
-                Err(err) => log::error!("\"{err}\" when receiving connection"),
+    TListener: NetListener<TConnection> + Send + 'static,
+{
+    Box::new(|listener: TListener| {
+        Box::pin(async move {
+            loop {
+                match listener.accept().await {
+                    Ok(_conn) => log::info!("Got connection"),
+                    Err(err) => log::error!("Error receiving connection: {err}"),
+                }
             }
-        }
 
-        Ok(())
+            #[allow(unreachable_code)]
+            Ok(())
+        })
     })
 }

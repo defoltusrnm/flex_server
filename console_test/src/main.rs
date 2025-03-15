@@ -4,10 +4,9 @@ mod server_errors;
 
 use app_logging::logger_cfg::configure_logs;
 use dotenv::dotenv;
-use flex_net_core::networking::listeners::NetListener;
-use flex_server_core::networking::servers::NetServer;
+use flex_server_core::networking::{behaviors, servers::NetServer};
 use log::{LevelFilter, error, info, trace};
-use networking::{address_src::EndpointAddressSrcs, listeners::NetTcpListener, servers::ContinuesServer};
+use networking::{address_src::EndpointAddressSrcs, connections::NetTcpConnection, listeners::NetTcpListener, servers::ContinuesServer};
 
 #[tokio::main]
 async fn main() {
@@ -16,19 +15,10 @@ async fn main() {
     dotenv().unwrap();
     trace!(".env loaded");
 
-    match ContinuesServer::start(EndpointAddressSrcs::env(), |listener: NetTcpListener| {
-        Box::pin(async move {
-            loop {
-                match listener.accept().await {
-                    Ok(conn) => info!("got connection"),
-                    Err(err) => error!("\"{err}\" when receiving connection"),
-                }
-            }
-
-            Ok(())
-        })
-    })
-    .await
+    match ContinuesServer::start(
+        EndpointAddressSrcs::env(), 
+        behaviors::infinite_read::<NetTcpConnection, NetTcpListener>()
+    ).await
     {
         Ok(()) => info!("server closed"),
         Err(app_err) => error!("server got critical err: {app_err}"),
