@@ -16,10 +16,7 @@ async fn main() {
     trace!(".env loaded");
 
     match ContinuesServer::start(
-        EndpointAddressSrcs::env(), 
-        server_behaviors::infinite_read::<NetTcpConnection, NetTcpListener>(
-            session_behaviors::infinite_read::<NetTcpConnection>()
-        )
+        EndpointAddressSrcs::env() 
     ).await
     {
         Ok(()) => info!("server closed"),
