@@ -29,9 +29,7 @@ where
             .and_then_async(|addr| Box::pin(async move { TListener::bind(addr).await }))
             .await
             .inspect(|_| log::info!("server ready to accept new connections"))
-            .and_then_async(|listener| Box::pin(async move {
-                Arc::
-            })).await;
+            .map(|_| {()});
 
         server_result
     }
