@@ -4,7 +4,7 @@ mod server_errors;
 
 use app_logging::logger_cfg::configure_logs;
 use dotenv::dotenv;
-use flex_server_core::networking::{behaviors, servers::NetServer};
+use flex_server_core::networking::{server_behaviors, servers::NetServer, session_behaviors};
 use log::{LevelFilter, error, info, trace};
 use networking::{address_src::EndpointAddressSrcs, connections::NetTcpConnection, listeners::NetTcpListener, servers::ContinuesServer};
 
@@ -17,7 +17,9 @@ async fn main() {
 
     match ContinuesServer::start(
         EndpointAddressSrcs::env(), 
-        behaviors::infinite_read::<NetTcpConnection, NetTcpListener>()
+        server_behaviors::infinite_read::<NetTcpConnection, NetTcpListener>(
+            session_behaviors::infinite_read::<NetTcpConnection>()
+        )
     ).await
     {
         Ok(()) => info!("server closed"),

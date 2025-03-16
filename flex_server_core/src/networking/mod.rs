@@ -1,2 +1,3 @@
 pub mod servers;
-pub mod behaviors;
+pub mod server_behaviors;
+pub mod session_behaviors;

@@ -1,15 +1,19 @@
+use crate::error_handling::server_errors::ServerError;
+
+use super::messages::NetMessage;
+
 pub trait NetWriter
 where
     Self: Send + Sized,
 {
-    fn write();
+    fn write(self);
 }
 
 pub trait NetReader
 where
     Self: Send + Sized,
 {
-    fn read();
+    fn read(&mut self) -> impl std::future::Future<Output = Result<NetMessage, ServerError>> + Send;
 }
 
 pub trait NetConnection: NetReader + NetWriter {}

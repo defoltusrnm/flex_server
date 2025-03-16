@@ -1,7 +1,15 @@
 use std::net::SocketAddr;
 
-use flex_net_core::networking::connections::{NetConnection, NetReader, NetWriter};
-use tokio::net::TcpStream;
+use flex_net_core::{
+    error_handling::server_errors::ServerError,
+    networking::{
+        connections::{NetConnection, NetReader, NetWriter},
+        messages::NetMessage,
+    },
+};
+use tokio::{io::AsyncReadExt, net::TcpStream};
+
+use crate::server_errors::errors::ServerErrors;
 
 pub struct NetTcpConnection {
     inner_socket: TcpStream,
@@ -20,13 +28,21 @@ impl NetTcpConnection {
 impl NetConnection for NetTcpConnection {}
 
 impl NetReader for NetTcpConnection {
-    fn read() {
-        todo!()
+    async fn read(&mut self) -> Result<NetMessage, ServerError> {
+        let mut buff = vec![0u8; 512];
+
+        match self.inner_socket.read(&mut buff).await {
+            Ok(len) => {
+                buff.truncate(len);
+                Ok(NetMessage::new(buff))
+            }
+            Err(err) => Err(ServerErrors::buffer_read_error(err)),
+        }
     }
 }
 
 impl NetWriter for NetTcpConnection {
-    fn write() {
+    fn write(self) {
         todo!()
     }
 }
