@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::pin::Pin;
 
 use flex_net_core::{
     error_handling::server_errors::ServerError,
@@ -12,13 +12,12 @@ where
     TConnection: NetConnection,
     TListener: NetListener<TConnection>,
 {
-    async fn start<TEndpointAddrSrc, ListenerFunc, ConnFunc>(
+    async fn start<TEndpointAddrSrc>(
         src: TEndpointAddrSrc,
-        listener_handler: ListenerFunc,
-        connection_handler: ConnFunc,
+        server_handler: Box<
+            dyn Fn(TListener) -> Pin<Box<dyn Future<Output = Result<(), ServerError>>>>,
+        >,
     ) -> Result<(), ServerError>
     where
-        TEndpointAddrSrc: EndpointAddressSrc,
-        ListenerFunc: AsyncFn(TListener, ConnFunc) -> Result<(), ServerError>,
-        ConnFunc: AsyncFn(&mut TConnection) -> Result<(), ServerError>;
+        TEndpointAddrSrc: EndpointAddressSrc;
 }

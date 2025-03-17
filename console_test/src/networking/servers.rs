@@ -1,4 +1,5 @@
-use std::sync::Arc;
+
+use std::pin::Pin;
 
 use flex_net_core::{
     async_utils::async_and_then::AsyncAndThen,
@@ -16,15 +17,14 @@ where
     TConnection: NetConnection,
     TListener: NetListener<TConnection> + Send,
 {
-    async fn start<TEndpointAddrSrc, ListenerFunc, ConnFunc>(
+    async fn start<TEndpointAddrSrc>(
         src: TEndpointAddrSrc,
-        listener_handler: ListenerFunc,
-        connection_handler: ConnFunc,
+        server_handler: Box<
+            dyn Fn(TListener) -> Pin<Box<dyn Future<Output = Result<(), ServerError>>>>,
+        >,
     ) -> Result<(), ServerError>
     where
-        TEndpointAddrSrc: EndpointAddressSrc,
-        ListenerFunc: AsyncFn(TListener, ConnFunc) -> Result<(), ServerError>,
-        ConnFunc: AsyncFn(&mut TConnection) -> Result<(), ServerError>,
+        TEndpointAddrSrc: EndpointAddressSrc
     {
         let x = src
             .get()
@@ -32,7 +32,7 @@ where
             .and_then_async(|addr| TListener::bind(addr))
             .await
             .inspect(|_| log::info!("server ready to receive new connections"))
-            .and_then_async(async move |listener| listener_handler(listener, connection_handler).await)
+            .and_then_async(|listener| server_handler(listener))
             .await;
 
         x
