@@ -13,7 +13,7 @@ pub trait NetReader
 where
     Self: Send + Sized,
 {
-    fn read(&mut self) -> impl std::future::Future<Output = Result<NetMessage, ServerError>> + Send;
+    async fn read(&mut self) -> Result<NetMessage, ServerError>;
 }
 
 pub trait NetConnection: NetReader + NetWriter {}

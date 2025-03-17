@@ -1,4 +1,4 @@
-use std::{pin::Pin, sync::Arc};
+use std::sync::Arc;
 
 use flex_net_core::{
     async_utils::async_and_then::AsyncAndThen,
@@ -9,28 +9,32 @@ use flex_net_core::{
 };
 use flex_server_core::networking::servers::NetServer;
 
-pub struct ContinuesServer;
+pub struct GenericServer;
 
-impl<TConnection, TListener> NetServer<TConnection, TListener> for ContinuesServer
+impl<TConnection, TListener> NetServer<TConnection, TListener> for GenericServer
 where
-    TListener: Send,
     TConnection: NetConnection,
-    TListener: NetListener<TConnection> + 'static,
+    TListener: NetListener<TConnection> + Send,
 {
-    async fn start<
-        TEndpointAddrSrc: EndpointAddressSrc,
-        F: Send + AsyncFn(TListener) -> Result<(), ServerError>
-    >(
+    async fn start<TEndpointAddrSrc, ListenerFunc, ConnFunc>(
         src: TEndpointAddrSrc,
-        handler: Arc<F>,
-    ) -> Result<(), ServerError> {
-        let server_result = src
+        listener_handler: ListenerFunc,
+        connection_handler: ConnFunc,
+    ) -> Result<(), ServerError>
+    where
+        TEndpointAddrSrc: EndpointAddressSrc,
+        ListenerFunc: AsyncFn(TListener, ConnFunc) -> Result<(), ServerError>,
+        ConnFunc: AsyncFn(&mut TConnection) -> Result<(), ServerError>,
+    {
+        let x = src
             .get()
-            .and_then_async(|addr| Box::pin(async move { TListener::bind(addr).await }))
+            .inspect(|addr| log::info!("server will try to use {0}:{1}", addr.host, addr.port))
+            .and_then_async(|addr| TListener::bind(addr))
             .await
-            .inspect(|_| log::info!("server ready to accept new connections"))
-            .map(|_| {()});
+            .inspect(|_| log::info!("server ready to receive new connections"))
+            .and_then_async(async move |listener| listener_handler(listener, connection_handler).await)
+            .await;
 
-        server_result
+        x
     }
 }

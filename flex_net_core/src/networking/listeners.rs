@@ -7,6 +7,6 @@ where
     TConnection: NetConnection,
     Self: Sized,
 {
-    fn bind(addr: EndpointAddress) -> impl std::future::Future<Output = Result<Self, ServerError>> + Send;
-    fn accept(&self) -> impl std::future::Future<Output = Result<TConnection, ServerError>> + Send;
+    async fn bind(addr: EndpointAddress) -> Result<Self, ServerError>;
+    async fn accept(&self) -> Result<TConnection, ServerError>;
 }

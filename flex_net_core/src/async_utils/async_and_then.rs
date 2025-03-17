@@ -1,22 +1,17 @@
-use std::pin::Pin;
-
 pub trait AsyncAndThen<TOk, Err, UOk, F>
 where
-    F: FnOnce(TOk) -> Pin<Box<dyn Future<Output = Result<UOk, Err>> + Send>> + Send,
+    F: AsyncFn(TOk) -> Result<UOk, Err>
 {
-    type Output;
-    async fn and_then_async(self, map: F) -> Self::Output;
+    async fn and_then_async(self, map: F) -> Result<UOk, Err>;
 }
 
-impl<TOk, TErr, UOk, F> AsyncAndThen<TOk, TErr, UOk, F> for Result<TOk, TErr>
+impl<TOk, Err, UOk, F> AsyncAndThen<TOk, Err, UOk, F> for Result<TOk, Err>
 where
     TOk: Send,
     UOk: Send,
-    F: 'static + FnOnce(TOk) -> Pin<Box<dyn Future<Output = Result<UOk, TErr>> + Send>> + Send
+    F: AsyncFn(TOk) -> Result<UOk, Err>
 {
-    type Output = Result<UOk, TErr>;
-
-    async fn and_then_async(self, map: F) -> Self::Output {
+    async fn and_then_async(self, map: F) -> Result<UOk, Err> {
         match self {
             Ok(val) => {
                 let x = map(val).await;
