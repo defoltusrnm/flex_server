@@ -1,0 +1,59 @@
+use std::{
+    env::{self, VarError},
+    io::Error,
+};
+
+use flex_net_core::{
+    async_utils::async_and_then::AsyncAndThen,
+    error_handling::server_errors::ServerError,
+    networking::certificate_src::{Certificate, CertificateSrc},
+};
+use tokio::{fs::File, io::AsyncReadExt};
+
+pub struct Pkcs12CertificateSrc {
+    cert_file_name: String,
+    cert_pwd_env: String,
+}
+
+impl Pkcs12CertificateSrc {
+    fn new_from_file_name_and_env(file_name: &str, env_name: &str) -> Self {
+        Pkcs12CertificateSrc {
+            cert_file_name: file_name.to_owned(),
+            cert_pwd_env: env_name.to_owned(),
+        }
+    }
+}
+
+impl CertificateSrc for Pkcs12CertificateSrc {
+    async fn get(&self) -> Result<Certificate, ServerError> {
+        let pwd_env_result =
+            env::var(&self.cert_pwd_env).map_err(ServerErrors::cannot_read_cert_pwd)?;
+
+        let cert_content_result = File::open(&self.cert_file_name)
+            .await
+            .map_err(ServerErrors::cannot_read_cert_file)
+            .and_then_async(async |mut f: File| {
+                let mut content = vec![];
+                f.read_to_end(&mut content).await;
+                Ok(content)
+            })
+            .await?;
+
+        Ok(Certificate {
+            cert_bytes: cert_content_result,
+            cert_pwd: pwd_env_result,
+        })
+    }
+}
+
+struct ServerErrors;
+
+impl ServerErrors {
+    pub fn cannot_read_cert_pwd(err: VarError) -> ServerError {
+        ServerError::new(format!("cannot read cert password from env: {err}"))
+    }
+
+    pub fn cannot_read_cert_file(err: Error) -> ServerError {
+        ServerError::new(format!("cannot read cert file: {err}"))
+    }
+}
