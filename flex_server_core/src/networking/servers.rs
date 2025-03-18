@@ -7,7 +7,7 @@ use flex_net_core::{
     },
 };
 
-use super::listeners::NetListener;
+use super::listeners::{NetListener, SecureNetListener};
 
 pub trait NetServer<TConnection, TListener>
 where
@@ -28,10 +28,11 @@ where
 pub trait SecureNetServer<TConnection, TListener>
 where
     TConnection: NetConnection,
-    TListener: NetListener<TConnection>,
+    TListener: SecureNetListener<TConnection>,
 {
     fn start<TEndpointAddrSrc, TCertificateSrc>(
-        src: TEndpointAddrSrc,
+        endpoint_src: TEndpointAddrSrc,
+        certificate_src: TCertificateSrc,
         server_handler: Box<
             dyn Fn(TListener) -> Pin<Box<dyn Future<Output = Result<(), ServerError>>>>,
         >,
