@@ -1,3 +1,4 @@
+
 use std::net::SocketAddr;
 
 use flex_net_core::{
@@ -8,8 +9,6 @@ use flex_net_core::{
     },
 };
 use tokio::{io::AsyncReadExt, net::TcpStream};
-
-use crate::server_errors::errors::ServerErrors;
 
 pub struct NetTcpConnection {
     inner_socket: TcpStream,
@@ -44,5 +43,13 @@ impl NetReader for NetTcpConnection {
 impl NetWriter for NetTcpConnection {
     fn write(self) {
         todo!()
+    }
+}
+
+struct ServerErrors;
+
+impl ServerErrors {
+    pub fn buffer_read_error(err: std::io::Error) -> ServerError {
+        ServerError::new(format!("error when read from connection: {err}"))
     }
 }

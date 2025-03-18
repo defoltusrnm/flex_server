@@ -4,10 +4,11 @@ mod server_errors;
 
 use app_logging::logger_cfg::configure_logs;
 use dotenv::dotenv;
+use flex_net_tcp::networking::connections::NetTcpConnection;
 use flex_server_core::networking::{server_behaviors, servers::NetServer, session_behaviors};
 use log::LevelFilter;
 use networking::{
-    address_src::EndpointAddressSrcs, connections::NetTcpConnection, listeners::NetTcpListener,
+    address_src::EndpointAddressSrcs, listeners::NetTcpListener,
     servers::GenericServer,
 };
 

@@ -3,9 +3,11 @@ use std::pin::Pin;
 use flex_net_core::{
     error_handling::server_errors::ServerError,
     networking::{
-        address_src::EndpointAddressSrc, connections::NetConnection, listeners::NetListener,
+        address_src::EndpointAddressSrc, connections::NetConnection,
     },
 };
+
+use super::listeners::NetListener;
 
 pub trait NetServer<TConnection, TListener>
 where

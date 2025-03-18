@@ -2,12 +2,11 @@ use std::pin::Pin;
 
 use flex_net_core::{
     error_handling::server_errors::ServerError,
-    networking::{
-        connections::NetConnection,
-        listeners::NetListener,
-    },
+    networking::connections::NetConnection,
 };
 use tokio::task;
+
+use super::listeners::NetListener;
 
 pub fn infinite_read<'a, TConnection, TListener, ConnFunc, ConnFut>(
     connection_handler: &'a ConnFunc,

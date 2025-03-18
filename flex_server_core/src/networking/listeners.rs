@@ -1,6 +1,5 @@
-use crate::error_handling::server_errors::ServerError;
+use flex_net_core::{error_handling::server_errors::ServerError, networking::{address_src::EndpointAddress, connections::NetConnection}};
 
-use super::{address_src::EndpointAddress, connections::NetConnection};
 
 pub trait NetListener<TConnection>
 where

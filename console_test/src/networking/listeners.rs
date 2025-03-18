@@ -1,12 +1,12 @@
 use flex_net_core::{
     error_handling::server_errors::ServerError,
-    networking::{address_src::EndpointAddress, listeners::NetListener},
+    networking::address_src::EndpointAddress
 };
+use flex_net_tcp::networking::connections::NetTcpConnection;
+use flex_server_core::networking::listeners::NetListener;
 use tokio::net::TcpListener;
 
 use crate::server_errors::errors::ServerErrors;
-
-use super::connections::NetTcpConnection;
 
 pub struct NetTcpListener {
     inner_listener: TcpListener,
