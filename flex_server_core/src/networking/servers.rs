@@ -7,12 +7,12 @@ use flex_net_core::{
     },
 };
 
-use super::listeners::{NetListener, SecureNetListener};
+use super::listeners::{NetAcceptable, NetListener, SecureNetListener};
 
 pub trait NetServer<TConnection, TListener>
 where
     TConnection: NetConnection,
-    TListener: NetListener<TConnection>,
+    TListener: NetListener + NetAcceptable<TConnection>,
 {
     fn start<TEndpointAddrSrc>(
         src: TEndpointAddrSrc,
@@ -28,7 +28,7 @@ where
 pub trait SecureNetServer<TConnection, TListener>
 where
     TConnection: NetConnection,
-    TListener: SecureNetListener<TConnection>,
+    TListener: SecureNetListener + NetAcceptable<TConnection>,
 {
     fn start<TEndpointAddrSrc, TCertificateSrc>(
         endpoint_src: TEndpointAddrSrc,

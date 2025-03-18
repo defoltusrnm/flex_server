@@ -1,14 +1,15 @@
-use flex_net_core::{error_handling::server_errors::ServerError, networking::address_src::EndpointAddress};
+use flex_net_core::{
+    error_handling::server_errors::ServerError, networking::address_src::EndpointAddress,
+};
 use flex_net_tcp::networking::connections::NetTcpConnection;
-use flex_server_core::networking::listeners::NetListener;
+use flex_server_core::networking::listeners::{NetAcceptable, NetListener};
 use tokio::net::TcpListener;
-
 
 pub struct NetTcpListener {
     inner_listener: TcpListener,
 }
 
-impl NetListener<NetTcpConnection> for NetTcpListener {
+impl NetListener for NetTcpListener {
     async fn bind(addr: EndpointAddress) -> Result<Self, ServerError> {
         match TcpListener::bind(format!("{0}:{1}", addr.host, addr.port)).await {
             Ok(listener) => Ok(NetTcpListener {
@@ -17,7 +18,9 @@ impl NetListener<NetTcpConnection> for NetTcpListener {
             Err(err) => Err(ServerErrors::bind_error(err)),
         }
     }
+}
 
+impl NetAcceptable<NetTcpConnection> for NetTcpListener {
     async fn accept(&self) -> Result<NetTcpConnection, ServerError> {
         match self.inner_listener.accept().await {
             Ok((socket, _)) => Ok(NetTcpConnection::from_tcp_stream(socket)),

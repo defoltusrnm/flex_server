@@ -2,7 +2,7 @@ use std::pin::Pin;
 
 use flex_net_core::{async_utils::async_and_then::AsyncAndThen, error_handling::server_errors::ServerError, networking::{address_src::EndpointAddressSrc, certificate_src::CertificateSrc, connections::NetConnection}};
 
-use crate::networking::{listeners::SecureNetListener, servers::SecureNetServer};
+use crate::networking::{listeners::{NetAcceptable, SecureNetListener}, servers::SecureNetServer};
 
 
 pub struct SecureGenericServer;
@@ -10,7 +10,7 @@ pub struct SecureGenericServer;
 impl<TConnection, TListener> SecureNetServer<TConnection, TListener> for SecureGenericServer
 where
     TConnection: NetConnection,
-    TListener: SecureNetListener<TConnection> + Send,
+    TListener: SecureNetListener + NetAcceptable<TConnection> + Send,
 {
     async fn start<TEndpointAddrSrc, TCertificateSrc>(
         endpoint_src: TEndpointAddrSrc,

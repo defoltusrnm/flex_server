@@ -6,14 +6,14 @@ use flex_net_core::{
 };
 use tokio::task;
 
-use super::listeners::NetListener;
+use super::listeners::NetAcceptable;
 
 pub fn infinite_read<'a, TConnection, TListener, ConnFunc, ConnFut>(
     connection_handler: &'a ConnFunc,
 ) -> Box<dyn Fn(TListener) -> Pin<Box<dyn Future<Output = Result<(), ServerError>> + 'a>> + 'a>
 where
     TConnection: 'a + NetConnection,
-    TListener: 'a + NetListener<TConnection>,
+    TListener: 'a + NetAcceptable<TConnection>,
     ConnFunc: Fn(TConnection) -> ConnFut,
     ConnFut: 'static + Send + Future<Output = Result<(), ServerError>>,
 {
@@ -26,7 +26,7 @@ fn infinite_read_pin<'a, TConnection, TListener, ConnFunc, ConnFut>(
 ) -> Pin<Box<dyn Future<Output = Result<(), ServerError>> + 'a>>
 where
     TConnection: 'a + NetConnection,
-    TListener: 'a + NetListener<TConnection>,
+    TListener: 'a + NetAcceptable<TConnection>,
     ConnFunc: 'a + Fn(TConnection) -> ConnFut,
     ConnFut: 'static + Send + Future<Output = Result<(), ServerError>>,
 {
@@ -39,7 +39,7 @@ pub async fn infinite_read_impl<TConnection, TListener, ConnFunc, ConnFut>(
 ) -> Result<(), ServerError>
 where
     TConnection: NetConnection,
-    TListener: NetListener<TConnection>,
+    TListener: NetAcceptable<TConnection>,
     ConnFunc: Fn(TConnection) -> ConnFut,
     ConnFut: 'static + Send + Future<Output = Result<(), ServerError>>,
 {

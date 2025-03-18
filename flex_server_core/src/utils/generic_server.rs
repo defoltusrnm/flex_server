@@ -6,14 +6,14 @@ use flex_net_core::{
     networking::{address_src::EndpointAddressSrc, connections::NetConnection},
 };
 
-use crate::networking::{listeners::NetListener, servers::NetServer};
+use crate::networking::{listeners::{NetAcceptable, NetListener}, servers::NetServer};
 
 pub struct GenericServer;
 
 impl<TConnection, TListener> NetServer<TConnection, TListener> for GenericServer
 where
     TConnection: NetConnection,
-    TListener: NetListener<TConnection> + Send,
+    TListener: NetListener + Send + NetAcceptable<TConnection>,
 {
     async fn start<TEndpointAddrSrc>(
         src: TEndpointAddrSrc,

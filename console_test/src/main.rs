@@ -5,7 +5,7 @@ use dotenv::dotenv;
 use flex_net_core::utils::env_host_source::EnvEndpointAddressSrc;
 use flex_net_tcp::networking::{connections::NetTcpConnection, secure_connections::SecureNetTcpConnection};
 use flex_server_core::{
-    networking::{secure_server_behaviors, server_behaviors, servers::{NetServer, SecureNetServer}, session_behaviors},
+    networking::{server_behaviors, servers::{NetServer, SecureNetServer}, session_behaviors},
     utils::{generic_server::GenericServer, secure_generic_server::SecureGenericServer},
 };
 use flex_server_tcp::{networking::{listeners::NetTcpListener, secure_listeners::SecureTcpNetListener}, utils::pkcs12_certificate_src::Pkcs12CertificateSrc};
@@ -38,7 +38,7 @@ async fn _insecure_server() {
 }
 
 async fn _secure_server() {
-    let server_handler = secure_server_behaviors::infinite_read::<SecureNetTcpConnection, SecureTcpNetListener, _, _>(
+    let server_handler = server_behaviors::infinite_read::<SecureNetTcpConnection, SecureTcpNetListener, _, _>(
         &session_behaviors::infinite_read::<SecureNetTcpConnection>,
     );
 
