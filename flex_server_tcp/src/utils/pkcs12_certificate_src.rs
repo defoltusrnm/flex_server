@@ -34,7 +34,10 @@ impl CertificateSrc for Pkcs12CertificateSrc {
             .map_err(ServerErrors::cannot_read_cert_file)
             .and_then_async(async |mut f: File| {
                 let mut content = vec![];
-                f.read_to_end(&mut content).await;
+                _ = f
+                    .read_to_end(&mut content)
+                    .await
+                    .inspect_err(|err| log::error!("read error {err}"));
                 Ok(content)
             })
             .await?;

@@ -2,7 +2,7 @@ use flex_net_core::{
     error_handling::server_errors::ServerError,
     networking::{address_src::EndpointAddress, certificate_src::Certificate},
 };
-use flex_net_tcp::networking::connections::NetTcpConnection;
+use flex_net_tcp::networking::secure_connections::SecureNetTcpConnection;
 use flex_server_core::networking::listeners::SecureNetListener;
 use native_tls::{Identity, TlsAcceptor as NativeTlsAcceptor};
 use tokio::net::TcpListener;
@@ -13,7 +13,7 @@ pub struct SecureTcpNetListener {
     acceptor: TlsAcceptor,
 }
 
-impl SecureNetListener<NetTcpConnection> for SecureTcpNetListener {
+impl SecureNetListener<SecureNetTcpConnection> for SecureTcpNetListener {
     async fn bind(
         addr: EndpointAddress,
         cert: Certificate,
@@ -36,8 +36,16 @@ impl SecureNetListener<NetTcpConnection> for SecureTcpNetListener {
         }
     }
 
-    async fn accept(&self) -> Result<NetTcpConnection, ServerError> {
-        todo!()
+    async fn accept(&self) -> Result<SecureNetTcpConnection, ServerError> {
+        let (socket, _) = self
+            .inner_listener
+            .accept()
+            .await
+            .map_err(ServerErrors::receive_error)?;
+
+        let secured_socket = self.acceptor.accept(socket).await.map_err(ServerErrors::tls_error)?;
+
+        Ok(SecureNetTcpConnection::from_tcp_stream(secured_socket))
     }
 }
 
@@ -55,6 +63,12 @@ impl ServerErrors {
     pub fn receive_error(err: std::io::Error) -> ServerError {
         ServerError::new(format!(
             "error when server tried to accept connection: {err}"
+        ))
+    }
+
+    pub fn tls_error(err: native_tls::Error) -> ServerError {
+        ServerError::new(format!(
+            "error when server tried to secure connection: {err}"
         ))
     }
 }
