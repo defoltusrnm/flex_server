@@ -1,17 +1,15 @@
 mod app_logging;
-mod networking;
-mod server_errors;
 
 use app_logging::logger_cfg::configure_logs;
 use dotenv::dotenv;
+use flex_net_core::utils::env_host_source::EnvEndpointAddressSrc;
 use flex_net_tcp::networking::connections::NetTcpConnection;
-use flex_server_core::networking::{server_behaviors, servers::NetServer, session_behaviors};
+use flex_server_core::{
+    networking::{server_behaviors, servers::NetServer, session_behaviors},
+    utils::generic_server::GenericServer,
+};
 use flex_server_tcp::networking::listeners::NetTcpListener;
 use log::LevelFilter;
-use networking::{
-    address_src::EndpointAddressSrcs, 
-    servers::GenericServer,
-};
 
 #[tokio::main]
 async fn main() {
@@ -24,7 +22,12 @@ async fn main() {
         &session_behaviors::infinite_read::<NetTcpConnection>,
     );
 
-    match GenericServer::start(EndpointAddressSrcs::env(), server_handler).await {
+    match GenericServer::start(
+        EnvEndpointAddressSrc::new_with_port_fallback(4141),
+        server_handler,
+    )
+    .await
+    {
         Ok(()) => log::info!("server ended it's work"),
         Err(err) => log::error!("server ended it's work with: {err}"),
     }

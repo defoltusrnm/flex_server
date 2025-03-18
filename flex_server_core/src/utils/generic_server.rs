@@ -3,11 +3,10 @@ use std::pin::Pin;
 use flex_net_core::{
     async_utils::async_and_then::AsyncAndThen,
     error_handling::server_errors::ServerError,
-    networking::{
-        address_src::EndpointAddressSrc, connections::NetConnection, 
-    },
+    networking::{address_src::EndpointAddressSrc, connections::NetConnection},
 };
-use flex_server_core::networking::{listeners::NetListener, servers::NetServer};
+
+use crate::networking::{listeners::NetListener, servers::NetServer};
 
 pub struct GenericServer;
 
@@ -23,7 +22,7 @@ where
         >,
     ) -> Result<(), ServerError>
     where
-        TEndpointAddrSrc: EndpointAddressSrc
+        TEndpointAddrSrc: EndpointAddressSrc,
     {
         let x = src
             .get()
