@@ -1,12 +1,8 @@
-use flex_net_core::{
-    error_handling::server_errors::ServerError,
-    networking::address_src::EndpointAddress
-};
+use flex_net_core::{error_handling::server_errors::ServerError, networking::address_src::EndpointAddress};
 use flex_net_tcp::networking::connections::NetTcpConnection;
 use flex_server_core::networking::listeners::NetListener;
 use tokio::net::TcpListener;
 
-use crate::server_errors::errors::ServerErrors;
 
 pub struct NetTcpListener {
     inner_listener: TcpListener,
@@ -27,5 +23,19 @@ impl NetListener<NetTcpConnection> for NetTcpListener {
             Ok((socket, addr)) => Ok(NetTcpConnection::from_tcp_stream(socket, addr)),
             Err(err) => Err(ServerErrors::receive_error(err)),
         }
+    }
+}
+
+struct ServerErrors;
+
+impl ServerErrors {
+    pub fn bind_error(err: std::io::Error) -> ServerError {
+        ServerError::new(format!("cannot start server because: {err}"))
+    }
+
+    pub fn receive_error(err: std::io::Error) -> ServerError {
+        ServerError::new(format!(
+            "error when server tried to accept connection: {err}"
+        ))
     }
 }

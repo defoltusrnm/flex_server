@@ -24,8 +24,4 @@ impl ServerErrors {
             "error when server tried to accept connection: {err}"
         ))
     }
-
-    pub fn buffer_read_error(err: std::io::Error) -> ServerError {
-        ServerError::new(format!("error when read from connection: {err}"))
-    }
 }
