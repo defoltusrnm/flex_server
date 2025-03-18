@@ -7,55 +7,59 @@ use flex_net_core::{
         listeners::{self, NetListener},
     },
 };
+use tokio::task;
 
-pub fn infinite_read<'a, TConnection, TListener, ConnFunc>(
+pub fn infinite_read<'a, TConnection, TListener, ConnFunc, ConnFut>(
     connection_handler: &'a ConnFunc,
 ) -> Box<dyn Fn(TListener) -> Pin<Box<dyn Future<Output = Result<(), ServerError>> + 'a>> + 'a>
 where
     TConnection: 'a + NetConnection,
     TListener: 'a + NetListener<TConnection>,
-    ConnFunc: 'a + AsyncFn(&mut TConnection) -> Result<(), ServerError>,
+    ConnFunc: Fn(TConnection) -> ConnFut,
+    ConnFut: 'static + Send + Future<Output = Result<(), ServerError>>,
 {
     Box::new(move |l| infinite_read_pin(l, connection_handler))
 }
 
-fn infinite_read_pin<'a, TConnection, TListener, ConnFunc>(
+fn infinite_read_pin<'a, TConnection, TListener, ConnFunc, ConnFut>(
     listener: TListener,
     connection_handler: ConnFunc,
 ) -> Pin<Box<dyn Future<Output = Result<(), ServerError>> + 'a>>
 where
     TConnection: 'a + NetConnection,
     TListener: 'a + NetListener<TConnection>,
-    ConnFunc: 'a + AsyncFn(&mut TConnection) -> Result<(), ServerError>,
+    ConnFunc: 'a + Fn(TConnection) -> ConnFut,
+    ConnFut: 'static + Send + Future<Output = Result<(), ServerError>>,
 {
     Box::pin(infinite_read_impl(listener, connection_handler))
 }
 
-pub async fn infinite_read_impl<TConnection, TListener, ConnFunc>(
+pub async fn infinite_read_impl<TConnection, TListener, ConnFunc, ConnFut>(
     listener: TListener,
     connection_handler: ConnFunc,
 ) -> Result<(), ServerError>
 where
     TConnection: NetConnection,
     TListener: NetListener<TConnection>,
-    ConnFunc: AsyncFn(&mut TConnection) -> Result<(), ServerError>,
+    ConnFunc: Fn(TConnection) -> ConnFut,
+    ConnFut: 'static + Send + Future<Output = Result<(), ServerError>>,
 {
+    let mut set = task::JoinSet::new();
     loop {
         log::info!("waiting for new connections");
         match listener.accept().await {
-            Ok(mut connection) => {
+            Ok(connection) => {
                 log::info!("got connection");
 
-                match connection_handler(&mut connection).await {
-                    Ok(()) => {
-                        log::info!("connection handled")
-                    }
-                    Err(err) => {
-                        log::error!("connection ended with error: {err}")
-                    }
-                };
+                set.spawn(connection_handler(connection));
             }
             Err(err) => {
+
+                set.join_all().await.iter().for_each(|res| match res {
+                    Ok(()) => log::info!("connection handled"),
+                    Err(err) => log::error!("connection handled with: {err}"),
+                });
+
                 return Err(err);
             }
         };

@@ -18,7 +18,7 @@ async fn main() {
     dotenv().unwrap();
     log::trace!(".env loaded");
 
-    let server_handler = server_behaviors::infinite_read::<NetTcpConnection, NetTcpListener, _>(
+    let server_handler = server_behaviors::infinite_read::<NetTcpConnection, NetTcpListener, _, _>(
         &session_behaviors::infinite_read::<NetTcpConnection>,
     );
 
