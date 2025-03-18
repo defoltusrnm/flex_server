@@ -6,6 +6,6 @@ where
     TConnection: NetConnection,
     Self: Sized,
 {
-    async fn bind(addr: EndpointAddress) -> Result<Self, ServerError>;
-    async fn accept(&self) -> Result<TConnection, ServerError>;
+    fn bind(addr: EndpointAddress) -> impl Future<Output = Result<Self, ServerError>>;
+    fn accept(&self) -> impl Future<Output = Result<TConnection, ServerError>>;
 }

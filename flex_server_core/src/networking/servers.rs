@@ -14,12 +14,12 @@ where
     TConnection: NetConnection,
     TListener: NetListener<TConnection>,
 {
-    async fn start<TEndpointAddrSrc>(
+    fn start<TEndpointAddrSrc>(
         src: TEndpointAddrSrc,
         server_handler: Box<
             dyn Fn(TListener) -> Pin<Box<dyn Future<Output = Result<(), ServerError>>>>,
         >,
-    ) -> Result<(), ServerError>
+    ) -> impl Future<Output = Result<(), ServerError>>
     where
         TEndpointAddrSrc: EndpointAddressSrc;
 }

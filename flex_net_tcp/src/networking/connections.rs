@@ -1,6 +1,3 @@
-
-use std::net::SocketAddr;
-
 use flex_net_core::{
     error_handling::server_errors::ServerError,
     networking::{
@@ -12,14 +9,12 @@ use tokio::{io::AsyncReadExt, net::TcpStream};
 
 pub struct NetTcpConnection {
     inner_socket: TcpStream,
-    call_addr: SocketAddr,
 }
 
 impl NetTcpConnection {
-    pub fn from_tcp_stream(stream: TcpStream, call_addr: SocketAddr) -> NetTcpConnection {
+    pub fn from_tcp_stream(stream: TcpStream) -> NetTcpConnection {
         NetTcpConnection {
             inner_socket: stream,
-            call_addr,
         }
     }
 }

@@ -20,7 +20,7 @@ impl NetListener<NetTcpConnection> for NetTcpListener {
 
     async fn accept(&self) -> Result<NetTcpConnection, ServerError> {
         match self.inner_listener.accept().await {
-            Ok((socket, addr)) => Ok(NetTcpConnection::from_tcp_stream(socket, addr)),
+            Ok((socket, _)) => Ok(NetTcpConnection::from_tcp_stream(socket)),
             Err(err) => Err(ServerErrors::receive_error(err)),
         }
     }
