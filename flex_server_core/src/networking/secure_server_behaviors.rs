@@ -6,7 +6,7 @@ use flex_net_core::{
 };
 use tokio::task;
 
-use super::listeners::{NetListener, SecureNetListener};
+use super::listeners::SecureNetListener;
 
 pub fn infinite_read<'a, TConnection, TListener, ConnFunc, ConnFut>(
     connection_handler: &'a ConnFunc,

@@ -16,7 +16,7 @@ pub struct Pkcs12CertificateSrc {
 }
 
 impl Pkcs12CertificateSrc {
-    fn new_from_file_name_and_env(file_name: &str, env_name: &str) -> Self {
+    pub fn new_from_file_name_and_env(file_name: &str, env_name: &str) -> Self {
         Pkcs12CertificateSrc {
             cert_file_name: file_name.to_owned(),
             cert_pwd_env: env_name.to_owned(),

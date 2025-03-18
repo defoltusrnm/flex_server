@@ -5,9 +5,9 @@ use flex_net_core::{async_utils::async_and_then::AsyncAndThen, error_handling::s
 use crate::networking::{listeners::SecureNetListener, servers::SecureNetServer};
 
 
-pub struct GenericServer;
+pub struct SecureGenericServer;
 
-impl<TConnection, TListener> SecureNetServer<TConnection, TListener> for GenericServer
+impl<TConnection, TListener> SecureNetServer<TConnection, TListener> for SecureGenericServer
 where
     TConnection: NetConnection,
     TListener: SecureNetListener<TConnection> + Send,
