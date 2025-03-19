@@ -14,6 +14,7 @@ where
     Self: Send + Sized,
 {
     fn read(&mut self, buffer_len: usize) -> impl Future<Output = Result<NetMessage, ServerError>>;
+    fn read_exactly(&mut self, buffer_len: usize) -> impl Future<Output = Result<NetMessage, ServerError>>;
 }
 
 pub trait NetConnection: NetReader + NetWriter {}

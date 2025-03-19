@@ -33,6 +33,18 @@ impl NetReader for NetTcpConnection {
             Err(err) => Err(ServerErrors::buffer_read_error(err)),
         }
     }
+
+    async fn read_exactly(&mut self, buffer_len: usize) -> Result<NetMessage, ServerError> {
+        let mut buff = vec![0u8; buffer_len];
+
+        _ = self
+            .inner_socket
+            .read_exact(&mut buff)
+            .await
+            .map_err(ServerErrors::buffer_read_error)?;
+
+        Ok(NetMessage::new(buff))
+    }
 }
 
 impl NetWriter for NetTcpConnection {

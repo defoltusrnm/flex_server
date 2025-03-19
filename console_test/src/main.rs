@@ -2,13 +2,19 @@ mod app_logging;
 
 use app_logging::logger_cfg::configure_logs;
 use dotenv::dotenv;
-use flex_net_core::utils::env_host_source::EnvEndpointAddressSrc;
-use flex_net_tcp::networking::{connections::NetTcpConnection, secure_connections::SecureNetTcpConnection};
-use flex_server_core::{
-    networking::{server_behaviors, servers::{NetServer, SecureNetServer}, session_behaviors},
-    utils::{generic_server::GenericServer, secure_generic_server::SecureGenericServer},
+use flex_net_core::{
+    error_handling::server_errors::ServerError, networking::connections::NetConnection,
+    utils::env_host_source::EnvEndpointAddressSrc,
 };
-use flex_server_tcp::{networking::{listeners::NetTcpListener, secure_listeners::SecureTcpNetListener}, utils::pkcs12_certificate_src::Pkcs12CertificateSrc};
+use flex_net_tcp::networking::secure_connections::SecureNetTcpConnection;
+use flex_server_core::{
+    networking::{server_behaviors, servers::SecureNetServer},
+    utils::secure_generic_server::SecureGenericServer,
+};
+use flex_server_tcp::{
+    networking::secure_listeners::SecureTcpNetListener,
+    utils::pkcs12_certificate_src::Pkcs12CertificateSrc,
+};
 use log::LevelFilter;
 
 #[tokio::main]
@@ -17,32 +23,17 @@ async fn main() {
 
     match dotenv() {
         Ok(_) => log::trace!(".env loaded"),
-        Err(err) => log::trace!(".env failed to load due to {err}")
+        Err(err) => log::trace!(".env failed to load due to {err}"),
     };
 
-    _secure_server().await;
+    secure_server().await;
 }
 
-async fn _insecure_server() {
-    let server_handler = server_behaviors::infinite_read::<NetTcpConnection, NetTcpListener, _, _>(
-        &session_behaviors::infinite_read::<NetTcpConnection>,
-    );
-
-    match GenericServer::start(
-        EnvEndpointAddressSrc::new_with_port_fallback(4141),
-        server_handler,
-    )
-    .await
-    {
-        Ok(()) => log::info!("server ended it's work"),
-        Err(err) => log::error!("server ended it's work with: {err}"),
-    }
-}
-
-async fn _secure_server() {
-    let server_handler = server_behaviors::infinite_read::<SecureNetTcpConnection, SecureTcpNetListener, _, _>(
-        &session_behaviors::infinite_read::<SecureNetTcpConnection>,
-    );
+async fn secure_server() {
+    let server_handler =
+        server_behaviors::infinite_read::<SecureNetTcpConnection, SecureTcpNetListener, _, _>(
+            &exact_read::<SecureNetTcpConnection>,
+        );
 
     match SecureGenericServer::start(
         EnvEndpointAddressSrc::new_with_port_fallback(4141),
@@ -53,5 +44,28 @@ async fn _secure_server() {
     {
         Ok(()) => log::info!("server ended it's work"),
         Err(err) => log::error!("server ended it's work with: {err}"),
+    }
+}
+
+pub async fn exact_read<TConnection>(mut connection: TConnection) -> Result<(), ServerError>
+where
+    TConnection: NetConnection,
+{
+    loop {
+        let msg_size = connection.read(8).await.map(|msg| {
+            let mut usize_bytes = [0u8; 8];
+            usize_bytes.copy_from_slice(&msg.bytes());
+
+            if cfg!(target_endian = "big") {
+                usize::from_be_bytes(usize_bytes)
+            } else {
+                usize::from_le_bytes(usize_bytes)
+            }
+        })?;
+
+        let actual_message = connection.read_exactly(msg_size).await?;
+        log::info!("Got message {0}", actual_message.to_string()?);
+
+        
     }
 }
