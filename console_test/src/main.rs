@@ -15,8 +15,10 @@ use log::LevelFilter;
 async fn main() {
     configure_logs(LevelFilter::Trace).unwrap();
 
-    dotenv().unwrap();
-    log::trace!(".env loaded");
+    match dotenv() {
+        Ok(_) => log::trace!(".env loaded"),
+        Err(err) => log::trace!(".env failed to load due to {err}")
+    };
 
     _secure_server().await;
 }
@@ -44,7 +46,7 @@ async fn _secure_server() {
 
     match SecureGenericServer::start(
         EnvEndpointAddressSrc::new_with_port_fallback(4141),
-        Pkcs12CertificateSrc::new_from_file_name_and_env("cert.pfx", "HOST"),
+        Pkcs12CertificateSrc::new_from_env("CERT_PATH", "HOST"),
         server_handler,
     )
     .await
