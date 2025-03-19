@@ -46,7 +46,7 @@ async fn _secure_server() {
 
     match SecureGenericServer::start(
         EnvEndpointAddressSrc::new_with_port_fallback(4141),
-        Pkcs12CertificateSrc::new_from_env("CERT_PATH", "HOST"),
+        Pkcs12CertificateSrc::new_from_env("CERT_PATH", "CERT_PWD"),
         server_handler,
     )
     .await
