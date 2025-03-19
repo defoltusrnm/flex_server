@@ -52,7 +52,7 @@ where
     TConnection: NetConnection,
 {
     loop {
-        let msg_size = connection.read(8).await.map(|msg| {
+        let msg_size = connection.read_exactly(8).await.map(|msg| {
             let mut usize_bytes = [0u8; 8];
             usize_bytes.copy_from_slice(&msg.bytes());
 
@@ -64,8 +64,11 @@ where
         })?;
 
         let actual_message = connection.read_exactly(msg_size).await?;
-        log::info!("Got message {0}", actual_message.to_string()?);
-
-        
+        log::info!(
+            "Got message {0} {1} {2}",
+            msg_size,
+            actual_message.to_string()?.len(),
+            actual_message.to_string()?
+        );
     }
 }
