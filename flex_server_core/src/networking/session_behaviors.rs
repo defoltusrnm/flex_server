@@ -2,12 +2,13 @@ use flex_net_core::{
     error_handling::server_errors::ServerError, networking::connections::NetConnection,
 };
 
+
 pub async fn infinite_read<TConnection>(mut connection: TConnection) -> Result<(), ServerError>
 where
     TConnection: NetConnection,
 {
     loop {
-        match connection.read().await {
+        match connection.read(512).await {
             Ok(frame) => {
                 let msg_res = frame.to_string().and_then(|x| {
                     Some(x)

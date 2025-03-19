@@ -24,8 +24,8 @@ impl SecureNetTcpConnection {
 impl NetConnection for SecureNetTcpConnection {}
 
 impl NetReader for SecureNetTcpConnection {
-    async fn read(&mut self) -> Result<NetMessage, ServerError> {
-        let mut buff = vec![0u8; 512];
+    async fn read(&mut self, buffer_len: usize) -> Result<NetMessage, ServerError> {
+        let mut buff = vec![0u8; buffer_len];
 
         match self.inner_socket.read(&mut buff).await {
             Ok(len) => {
