@@ -64,11 +64,8 @@ where
         })?;
 
         let actual_message = connection.read_exactly(msg_size).await?;
-        log::info!(
-            "Got message {0} {1} {2}",
-            msg_size,
-            actual_message.to_string()?.len(),
-            actual_message.to_string()?
-        );
+        let msg = actual_message.to_string()?;
+        
+        log::info!("Got message {0} {1} {2}", msg_size, msg.len(), msg);
     }
 }
